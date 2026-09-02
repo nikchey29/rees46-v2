@@ -1,0 +1,81 @@
+# ==========================================
+# Python
+# ==========================================
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+
+# ==========================================
+# Virtual environments
+# ==========================================
+.venv/
+venv/
+env/
+
+# ==========================================
+# Python tooling
+# ==========================================
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# ==========================================
+# macOS / IDE
+# ==========================================
+.DS_Store
+.idea/
+.vscode/
+
+# ==========================================
+# Secrets / environment configuration
+# ==========================================
+.env
+.env.*
+!.env.example
+
+# ==========================================
+# REES46 datasets
+# ==========================================
+data/raw/*
+data/bronze/*
+data/silver/*
+data/gold/*
+
+!data/raw/.gitkeep
+!data/bronze/.gitkeep
+!data/silver/.gitkeep
+!data/gold/.gitkeep
+
+# ==========================================
+# Model artifacts
+# ==========================================
+models/*
+!models/.gitkeep
+
+# ==========================================
+# Generated reports / experiment artifacts
+# ==========================================
+reports/figures/*
+reports/metrics/*
+reports/experiments/*
+
+!reports/figures/.gitkeep
+!reports/metrics/.gitkeep
+!reports/experiments/.gitkeep
+
+# ==========================================
+# Jupyter
+# ==========================================
+.ipynb_checkpoints/
+
+# ==========================================
+# Logs / temporary files
+# ==========================================
+logs/
+*.log
+*.tmp
+*.temp
