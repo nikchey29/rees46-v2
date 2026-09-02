@@ -5,6 +5,10 @@ description = "Production-style behavioral recommendation platform built on the 
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
 dependencies = [
+    "duckdb>=1.5.5",
+    "numpy>=2.4.6",
+    "pandas>=3.0.5",
+    "pyarrow>=25.0.1",
     "pydantic>=2.13.5",
     "pyyaml>=6.0.3",
     "structlog>=26.1.0",
@@ -56,6 +60,7 @@ addopts = [
 ]
 
 [tool.mypy]
+mypy_path = "src"
 python_version = "3.11"
 files = ["src"]
 strict = true

@@ -4,6 +4,7 @@ from typing import Annotated
 
 import typer
 
+from rees46.ingestion.run import run_data_foundation
 from rees46.runtime.config import Profile, load_config
 from rees46.runtime.logging import configure_logging, get_logger
 from rees46.runtime.pipeline import PIPELINE_ORDER
@@ -59,6 +60,16 @@ def pipeline(
             position=position,
             stage=stage.value,
         )
+
+
+@app.command("build-data")
+def build_data(
+    profile: ProfileOption = Profile.DEV,
+) -> None:
+    """Build and validate the REES46 Bronze data layer."""
+    config = load_config(profile)
+    configure_logging(config)
+    run_data_foundation(config)
 
 
 def main() -> None:
