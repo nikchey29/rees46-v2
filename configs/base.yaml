@@ -1,0 +1,18 @@
+project:
+  name: "REES46 V2"
+  random_seed: 42
+
+paths:
+  raw: "data/raw"
+  bronze: "data/bronze"
+  silver: "data/silver"
+  gold: "data/gold"
+  models: "models"
+  reports: "reports"
+
+logging:
+  level: "INFO"
+  json_output: false
+
+runtime:
+  fail_fast: true

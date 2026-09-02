@@ -1,0 +1,5 @@
+profile: "full"
+
+logging:
+  level: "INFO"
+  json_output: true
