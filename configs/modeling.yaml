@@ -1,0 +1,31 @@
+experiment_name: "rees46-v2"
+random_seed: 42
+k_values: [5, 10, 20]
+
+dev:
+  max_train_interactions: 100000
+  max_eval_users: 500
+  max_sessions: 5000
+  covisitation_neighbors: 50
+  collaborative_components: 24
+  collaborative_max_users: 20000
+  collaborative_max_items: 10000
+  candidate_pool_size: 60
+  sequential_vocab_size: 3000
+  sequential_max_len: 20
+  sequential_epochs: 1
+  sequential_batch_size: 256
+
+full:
+  max_train_interactions: 1500000
+  max_eval_users: 5000
+  max_sessions: 50000
+  covisitation_neighbors: 100
+  collaborative_components: 64
+  collaborative_max_users: 100000
+  collaborative_max_items: 50000
+  candidate_pool_size: 100
+  sequential_vocab_size: 10000
+  sequential_max_len: 30
+  sequential_epochs: 2
+  sequential_batch_size: 512

@@ -79,3 +79,14 @@ logs/
 *.log
 *.tmp
 *.temp
+
+# ==========================================
+# Experiment tracking / local services
+# ==========================================
+mlruns/
+reports/experiments/mlruns/
+*.sqlite
+
+# Model serialization anywhere outside models/
+*.joblib
+*.keras

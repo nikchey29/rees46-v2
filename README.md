@@ -1,0 +1,188 @@
+# REES46 V2 — Behavioral Recommendation Platform
+
+A production-style recommendation engineering project built on the public REES46 multi-category marketplace behavior dataset. The repository treats recommendation as an end-to-end systems problem: data provenance, large-scale event processing, quality gates, leakage-safe evaluation, retrieval, ranking, sequential modeling, experiment tracking, serving, and reproducible operations.
+
+## Verified scale
+
+The local pipeline processed **411,709,736** Bronze events from October 2019 through April 2020. Exact deduplication removed **1,384,422** events (**0.336%**) and reconciled to **410,325,314** Silver events. Critical Bronze checks reported zero critical nulls, invalid event types, invalid IDs, negative prices, and wrong-month timestamps.
+
+The October partitioned-Gold canary produced **23,307,630 user-item interactions**, **166,794 item rows**, **3,022,290 user rows**, **7,763,898 user-category affinities**, and **5,971,465 session sequences**.
+
+Measured data-engineering evidence is tracked in [`results/data_foundation.json`](results/data_foundation.json). Final recommendation metrics are intentionally generated only by a real local run and frozen afterward; they are not fabricated in the repository.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    RAW[REES46 CSV.GZ] --> B[Bronze Parquet]
+    B --> V[Quality gates]
+    V --> S[Silver canonical events]
+    S --> G[Monthly Gold facts]
+    G --> P[Popularity]
+    G --> CV[Co-visitation]
+    G --> CF[Collaborative SVD]
+    P --> H[Hybrid retrieval]
+    CV --> H
+    CF --> H
+    H --> R[Purchase ranker]
+    G --> Q[TensorFlow sequence model]
+    R --> E[Top-K evaluation]
+    Q --> E
+    E --> M[MLflow / JSON results]
+    M --> API[FastAPI]
+    M --> PG[(PostgreSQL)]
+```
+
+See [`docs/architecture.md`](docs/architecture.md) for the detailed design and [`docs/adr/001-partitioned-gold.md`](docs/adr/001-partitioned-gold.md) for the large-scale aggregation decision.
+
+## Modeling protocol
+
+The evaluation protocol is chronological and leakage-safe:
+
+- **Train:** October 2019–February 2020
+- **Validation:** March 2020
+- **Test:** April 2020
+
+The stack includes:
+
+- global popularity;
+- category/context popularity;
+- session co-visitation;
+- truncated-SVD collaborative filtering;
+- reciprocal-rank-fusion hybrid retrieval;
+- gradient-boosted purchase-oriented re-ranking;
+- TensorFlow GRU next-item recommendation;
+- Precision@K, Recall@K, HitRate@K, NDCG@K, MAP@K and MRR@K;
+- MLflow experiment tracking.
+
+## Repository structure
+
+```text
+configs/                 typed runtime + modeling profiles
+docs/                    architecture, methodology, runbook, ADRs
+results/                 small Git-trackable measured evidence
+scripts/                 download, verification, local finalization
+sql/ddl/                 PostgreSQL serving/metadata schema
+src/rees46/
+  ingestion/             raw manifest + Bronze ingestion
+  validation/            Bronze quality gates
+  preprocessing/         Silver canonicalization
+  features/              Gold facts + temporal contract
+  analytics/             behavioral EDA
+  recommendations/       retrieval, ranking, sequence models
+  evaluation/            Top-K metrics
+  experiments/           leakage-safe datasets, runner, MLflow, freezing
+  serving/               FastAPI inference
+  warehouse/             PostgreSQL publication
+  runtime/               typed config, logging, pipeline contract
+tests/                    source/unit/API/metric contracts
+```
+
+Large datasets, Parquet files, trained models, MLflow storage and credentials are deliberately excluded from Git.
+
+## Quick start
+
+Python 3.11 and `uv` are required.
+
+```bash
+uv lock
+uv sync --all-extras
+make quality
+```
+
+If the local Bronze/Silver data already exists, finish everything from Gold onward with:
+
+```bash
+./scripts/finalize_local.sh full
+```
+
+The wrapper runs the complete source quality gate, builds any missing Gold layer, runs EDA, trains/evaluates the model stack, freezes small result JSONs, and re-runs the quality gate.
+
+For a fast development smoke experiment:
+
+```bash
+uv run rees46 run-experiments --profile dev --no-sequence --no-mlflow
+```
+
+## CLI
+
+```bash
+uv run rees46 --help
+uv run rees46 info --profile full
+uv run rees46 pipeline --profile full
+uv run rees46 build-data --profile full
+uv run rees46 build-silver --profile full
+uv run rees46 build-gold --profile full
+uv run rees46 eda --profile full
+uv run rees46 run-experiments --profile full
+uv run rees46 freeze-results --profile full
+```
+
+## Serving
+
+After an experiment creates `models/recommendation_bundle.joblib`:
+
+```bash
+make api
+```
+
+```bash
+curl http://localhost:8000/health
+curl http://localhost:8000/model
+curl 'http://localhost:8000/recommend/123456789?k=20'
+```
+
+Known users receive hybrid/ranked recommendations. Unknown users fall back explicitly to global popularity.
+
+## PostgreSQL + Docker
+
+Start PostgreSQL:
+
+```bash
+docker compose up -d postgres
+```
+
+Publish model metadata and item facts:
+
+```bash
+export REES46_POSTGRES_DSN='postgresql://rees46:rees46@localhost:5432/rees46'
+uv run rees46 publish-postgres --profile full --dsn "$REES46_POSTGRES_DSN"
+```
+
+Run the API container after the model bundle exists:
+
+```bash
+docker compose up --build api
+```
+
+## Quality and reproducibility
+
+```bash
+make verify
+make quality
+```
+
+The quality gate runs source verification, Ruff formatting/linting, strict mypy, and pytest. GitHub Actions runs the same source-only checks without downloading the 400M-event dataset or training models.
+
+## Scalability lesson
+
+The first global Gold aggregation over roughly 410M Silver rows exhausted DuckDB temporary storage after a ~30.6 GiB spill. The system was redesigned around monthly Gold partitions instead of increasing memory/disk limits and keeping a fragile monolithic query. This makes the pipeline restartable, bounded in working-set size, and naturally aligned with chronological evaluation.
+
+## Results
+
+Verified data-layer results are in [`docs/results.md`](docs/results.md). After the final run, use:
+
+```bash
+uv run rees46 freeze-results --profile full
+```
+
+to copy small measured outputs into `results/latest/` for GitHub. Never commit raw REES46 files, Parquet datasets, model binaries, MLflow storage, or credentials.
+
+## Documentation
+
+- [`docs/architecture.md`](docs/architecture.md)
+- [`docs/methodology.md`](docs/methodology.md)
+- [`docs/results.md`](docs/results.md)
+- [`docs/runbook.md`](docs/runbook.md)
+- [`docs/portfolio.md`](docs/portfolio.md)
+- [`docs/adr/001-partitioned-gold.md`](docs/adr/001-partitioned-gold.md)

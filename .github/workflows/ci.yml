@@ -1,0 +1,22 @@
+name: source-ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: uv sync
+      - name: Source verification
+        run: uv run python scripts/verify_source.py
+      - name: Quality gate
+        run: make quality
+      - name: CLI smoke test
+        run: uv run rees46 --help
