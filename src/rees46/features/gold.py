@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 
 import duckdb
@@ -19,6 +20,11 @@ def _write_parquet(
     """Execute a query and atomically write one Parquet dataset."""
 
     target.parent.mkdir(parents=True, exist_ok=True)
+
+    # Gold outputs are immutable for a fixed Silver input. Reuse completed
+    # atomic targets so an interrupted full run resumes at the failed table.
+    if target.exists():
+        return
 
     temp_target = target.with_suffix(".tmp.parquet")
 
@@ -59,6 +65,106 @@ def _count_rows(
         raise RuntimeError(f"Could not count Parquet rows: {path}")
 
     return int(row[0])
+
+
+def _build_session_sequences_bucketed(
+    connection: duckdb.DuckDBPyConnection,
+    source_sql: str,
+    target: Path,
+    buckets: int = 64,
+) -> None:
+    """Build ordered session lists in bounded hash buckets.
+
+    DuckDB's list() aggregate cannot spill its intermediate state to disk.
+    Hash-partitioning session events first keeps every list aggregation bounded
+    while guaranteeing all rows for one session remain in the same bucket.
+    """
+
+    if buckets <= 0:
+        raise ValueError("buckets must be positive")
+
+    target.parent.mkdir(parents=True, exist_ok=True)
+    bucket_source = target.parent / "_bucket_source"
+    bucket_results = target.parent / "_bucket_results"
+
+    shutil.rmtree(bucket_source, ignore_errors=True)
+    shutil.rmtree(bucket_results, ignore_errors=True)
+    bucket_results.mkdir(parents=True, exist_ok=True)
+
+    bucket_source_sql = str(bucket_source).replace("'", "''")
+
+    try:
+        # One streaming scan of Silver creates bounded on-disk hash partitions.
+        connection.execute(
+            f"""
+            COPY (
+                SELECT
+                    user_session,
+                    user_id,
+                    event_time,
+                    product_id,
+                    event_type,
+                    hash(user_session) % {buckets} AS session_bucket
+                FROM read_parquet('{source_sql}')
+                WHERE user_session IS NOT NULL
+            )
+            TO '{bucket_source_sql}'
+            (
+                FORMAT PARQUET,
+                COMPRESSION ZSTD,
+                PARTITION_BY (session_bucket),
+                OVERWRITE_OR_IGNORE
+            )
+            """
+        )
+
+        partition_dirs = sorted(bucket_source.glob("session_bucket=*"))
+
+        if not partition_dirs:
+            raise RuntimeError("Session bucketing produced no partitions.")
+
+        # list(... ORDER BY ...) is intentionally executed one bucket at a time.
+        # All rows from a user_session share the same deterministic hash bucket.
+        connection.execute("SET threads = 1")
+
+        for partition_dir in partition_dirs:
+            bucket_id = partition_dir.name.split("=", maxsplit=1)[1]
+            bucket_glob = str(partition_dir / "*.parquet").replace("'", "''")
+            part_target = bucket_results / f"part-{int(bucket_id):03d}.parquet"
+
+            _write_parquet(
+                connection,
+                f"""
+                SELECT
+                    user_session,
+                    any_value(user_id) AS user_id,
+                    min(event_time) AS session_start,
+                    max(event_time) AS session_end,
+                    count(*) AS event_count,
+                    list(product_id ORDER BY event_time) AS product_sequence,
+                    list(event_type ORDER BY event_time) AS event_sequence
+                FROM read_parquet('{bucket_glob}', hive_partitioning = false)
+                GROUP BY user_session
+                HAVING count(*) BETWEEN 2 AND 100
+                """,
+                part_target,
+            )
+
+        parts_glob = str(bucket_results / "part-*.parquet").replace("'", "''")
+
+        # Combining finished bucket outputs is streaming and does not aggregate.
+        _write_parquet(
+            connection,
+            f"""
+            SELECT *
+            FROM read_parquet('{parts_glob}', hive_partitioning = false)
+            """,
+            target,
+        )
+    finally:
+        connection.execute("SET threads = 2")
+        shutil.rmtree(bucket_source, ignore_errors=True)
+        shutil.rmtree(bucket_results, ignore_errors=True)
 
 
 def build_gold_month(
@@ -335,44 +441,12 @@ def build_gold_month(
 
     target = config.paths.gold / "session_sequences" / f"year_month={month}" / "data.parquet"
 
-    _write_parquet(
-        connection,
-        f"""
-        SELECT
-            user_session,
-
-            any_value(user_id)
-                AS user_id,
-
-            min(event_time)
-                AS session_start,
-
-            max(event_time)
-                AS session_end,
-
-            count(*)
-                AS event_count,
-
-            list(
-                product_id
-                ORDER BY event_time
-            ) AS product_sequence,
-
-            list(
-                event_type
-                ORDER BY event_time
-            ) AS event_sequence
-
-        FROM read_parquet('{source_sql}')
-
-        WHERE user_session IS NOT NULL
-
-        GROUP BY user_session
-
-        HAVING count(*) BETWEEN 2 AND 100
-        """,
-        target,
-    )
+    if not target.exists():
+        _build_session_sequences_bucketed(
+            connection=connection,
+            source_sql=source_sql,
+            target=target,
+        )
 
     counts["session_sequences"] = _count_rows(
         connection,

@@ -1,0 +1,13 @@
+{
+  "frozen_at_utc": "2026-09-06T00:50:54.191769+00:00",
+  "profile": "full",
+  "copied_metrics": [
+    "bronze_ingestion_counts.json",
+    "silver_reconciliation.json",
+    "gold_build_summary.json",
+    "eda_summary.json",
+    "model_benchmark.json"
+  ],
+  "large_data_committed": false,
+  "model_binaries_committed": false
+}

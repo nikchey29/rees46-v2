@@ -1,0 +1,37 @@
+{
+  "2019-10": {
+    "bronze_rows": 42448764,
+    "silver_rows": 42418544,
+    "removed_exact_duplicates": 30220
+  },
+  "2019-11": {
+    "bronze_rows": 67501979,
+    "silver_rows": 67401460,
+    "removed_exact_duplicates": 100519
+  },
+  "2019-12": {
+    "bronze_rows": 67542878,
+    "silver_rows": 67430759,
+    "removed_exact_duplicates": 112119
+  },
+  "2020-01": {
+    "bronze_rows": 55967041,
+    "silver_rows": 55829445,
+    "removed_exact_duplicates": 137596
+  },
+  "2020-02": {
+    "bronze_rows": 55318565,
+    "silver_rows": 54614649,
+    "removed_exact_duplicates": 703916
+  },
+  "2020-03": {
+    "bronze_rows": 56341241,
+    "silver_rows": 56175329,
+    "removed_exact_duplicates": 165912
+  },
+  "2020-04": {
+    "bronze_rows": 66589268,
+    "silver_rows": 66455128,
+    "removed_exact_duplicates": 134140
+  }
+}

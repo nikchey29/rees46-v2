@@ -168,15 +168,7 @@ The quality gate runs source verification, Ruff formatting/linting, strict mypy,
 
 The first global Gold aggregation over roughly 410M Silver rows exhausted DuckDB temporary storage after a ~30.6 GiB spill. The system was redesigned around monthly Gold partitions instead of increasing memory/disk limits and keeping a fragile monolithic query. This makes the pipeline restartable, bounded in working-set size, and naturally aligned with chronological evaluation.
 
-## Results
-
-Verified data-layer results are in [`docs/results.md`](docs/results.md). After the final run, use:
-
-```bash
-uv run rees46 freeze-results --profile full
-```
-
-to copy small measured outputs into `results/latest/` for GitHub. Never commit raw REES46 files, Parquet datasets, model binaries, MLflow storage, or credentials.
+pbpaste > /tmp/rees46_results.md
 
 ## Documentation
 
@@ -186,3 +178,51 @@ to copy small measured outputs into `results/latest/` for GitHub. Never commit r
 - [`docs/runbook.md`](docs/runbook.md)
 - [`docs/portfolio.md`](docs/portfolio.md)
 - [`docs/adr/001-partitioned-gold.md`](docs/adr/001-partitioned-gold.md)
+
+## Results
+
+REES46 V2 was evaluated using a strict chronological split to prevent future-data leakage:
+
+- **Training:** October 2019 - February 2020
+- **Validation:** March 2020
+- **Test:** April 2020
+
+The production-style pipeline processed the seven-month REES46 multi-category behavioral dataset:
+
+| Data statistic | Value |
+| --- | ---: |
+| Bronze events | 411,709,736 |
+| Canonical Silver events | 410,325,314 |
+| Exact duplicates removed | 1,384,422 |
+| Users | 15,639,803 |
+| Products | 386,299 |
+| Categories | 1,325 |
+| Sessions | 8,969,359 |
+
+Data-quality validation found zero critical nulls, invalid event types, invalid IDs, negative prices, or wrong-month events in the validated Bronze partitions.
+
+### Offline recommendation benchmark
+
+The final benchmark used 5,000 validation users and 5,000 held-out test users.
+
+| Model | Precision@5 | Recall@5 | Recall@10 | Recall@20 | HitRate@20 | MRR@20 | NDCG@20 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Popularity | 0.01084 | 0.03319 | 0.05685 | 0.08891 | 0.1250 | 0.02443 | 0.03593 |
+| Final purchase ranker | **0.01180** | **0.03588** | **0.07087** | **0.09835** | **0.1372** | **0.03556** | **0.04429** |
+
+Against the popularity baseline on the untouched April 2020 test set, the final purchase-oriented ranker improved:
+
+- **Recall@10 by 24.7%**
+- **Recall@20 by 10.6%**
+- **MRR@20 by 45.6%**
+- **NDCG@20 by 23.3%**
+
+The experiments also evaluated category-popularity, co-visitation, collaborative-filtering, hybrid-retrieval, ranking, and TensorFlow sequential approaches. The sequential model was retained as an experiment rather than presented as the winner: additional model complexity did not outperform the final ranking pipeline on the held-out benchmark.
+
+### Production validation
+
+The final recommendation bundle is exposed through a FastAPI service.
+
+Local API smoke testing verified `/health` returned status `ok` with the model loaded, and `/model` identified the deployed model as `hybrid+ranker` with a candidate pool size of 100.
+
+Experiment metadata is tracked locally with MLflow backed by SQLite. Large raw datasets, derived Parquet datasets, MLflow state, and trained model binaries are intentionally excluded from Git.

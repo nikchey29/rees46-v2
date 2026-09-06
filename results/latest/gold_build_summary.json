@@ -1,0 +1,51 @@
+{
+  "2019-10": {
+    "user_item_interactions": 23307630,
+    "item_stats": 166794,
+    "user_stats": 3022290,
+    "category_affinity": 7763898,
+    "session_sequences": 5971465
+  },
+  "2019-11": {
+    "user_item_interactions": 34442983,
+    "item_stats": 190662,
+    "user_stats": 3696117,
+    "category_affinity": 10686471,
+    "session_sequences": 8767879
+  },
+  "2019-12": {
+    "user_item_interactions": 35258969,
+    "item_stats": 205230,
+    "user_stats": 4577232,
+    "category_affinity": 14147011,
+    "session_sequences": 8953436
+  },
+  "2020-01": {
+    "user_item_interactions": 29964712,
+    "item_stats": 227608,
+    "user_stats": 4385985,
+    "category_affinity": 11916109,
+    "session_sequences": 7329204
+  },
+  "2020-02": {
+    "user_item_interactions": 29132311,
+    "item_stats": 258469,
+    "user_stats": 4233206,
+    "category_affinity": 10372865,
+    "session_sequences": 7007970
+  },
+  "2020-03": {
+    "user_item_interactions": 29086417,
+    "item_stats": 263383,
+    "user_stats": 4114060,
+    "category_affinity": 9771624,
+    "session_sequences": 7231936
+  },
+  "2020-04": {
+    "user_item_interactions": 35527377,
+    "item_stats": 263503,
+    "user_stats": 4509623,
+    "category_affinity": 11926004,
+    "session_sequences": 8019869
+  }
+}

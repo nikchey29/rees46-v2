@@ -202,10 +202,13 @@ def load_holdout_sessions(
         rows = connection.execute(
             f"""
             SELECT product_sequence
-            FROM read_parquet({_quoted_paths(paths)})
+            FROM (
+                SELECT product_sequence
+                FROM read_parquet({_quoted_paths(paths)})
+                WHERE event_count >= 2
+            )
             USING SAMPLE reservoir ({limit} ROWS)
             REPEATABLE ({random_seed})
-            WHERE event_count >= 2
             """
         ).fetchall()
     finally:

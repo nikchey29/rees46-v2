@@ -1,0 +1,14 @@
+{
+  "events": 410325314,
+  "users": 15639803,
+  "products": 386299,
+  "categories": 1325,
+  "sessions": 89693594,
+  "first_event": "2019-10-01 00:00:00",
+  "last_event": "2020-04-30 23:59:59",
+  "event_counts": {
+    "view": 385372400,
+    "cart": 18255425,
+    "purchase": 6697489
+  }
+}
