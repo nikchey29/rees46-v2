@@ -2,6 +2,15 @@
 
 A production-style recommendation engineering project built on the public REES46 multi-category marketplace behavior dataset. The repository treats recommendation as an end-to-end systems problem: data provenance, large-scale event processing, quality gates, leakage-safe evaluation, retrieval, ranking, sequential modeling, experiment tracking, serving, and reproducible operations.
 
+<!-- recruiter-summary -->
+[![CI](https://github.com/nikchey29/rees46-v2/actions/workflows/ci.yml/badge.svg)](https://github.com/nikchey29/rees46-v2/actions/workflows/ci.yml) ![Python 3.11](https://img.shields.io/badge/Python-3.11-blue) [![Release](https://img.shields.io/badge/release-v0.1.0-blue)](https://github.com/nikchey29/rees46-v2/releases/tag/v0.1.0)
+
+**411.7M Bronze events** · **410.3M canonical events** · **15.6M users** · **386K products** · **8.97M sessions**
+
+**Production pipeline:** `Bronze → Silver → monthly Gold → retrieval → purchase ranking → Top-K evaluation → MLflow → FastAPI`
+
+**Held-out April 2020 test vs. popularity baseline:** **+24.7% Recall@10** · **+10.6% Recall@20** · **+45.6% MRR@20** · **+23.3% NDCG@20**
+
 ## Verified scale
 
 The local pipeline processed **411,709,736** Bronze events from October 2019 through April 2020. Exact deduplication removed **1,384,422** events (**0.336%**) and reconciled to **410,325,314** Silver events. Critical Bronze checks reported zero critical nulls, invalid event types, invalid IDs, negative prices, and wrong-month timestamps.
