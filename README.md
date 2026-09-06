@@ -225,3 +225,15 @@ The final recommendation bundle is exposed through a FastAPI service.
 Local API smoke testing verified `/health` returned status `ok` with the model loaded, and `/model` identified the deployed model as `hybrid+ranker` with a candidate pool size of 100.
 
 Experiment metadata is tracked locally with MLflow backed by SQLite. Large raw datasets, derived Parquet datasets, MLflow state, and trained model binaries are intentionally excluded from Git.
+
+## Limitations
+
+This project evaluates recommendation quality offline on historical implicit-feedback data. The results therefore demonstrate performance on the defined chronological holdout protocol, not online user engagement or business impact.
+
+The large-scale data pipeline processes the full seven-month REES46 dataset, while recommendation benchmarking uses bounded user/session samples so multiple models can be compared reproducibly on local hardware. Reported recommendation metrics should therefore be interpreted as benchmark results rather than metrics over every user in the full dataset.
+
+The system does not currently include an online A/B-testing layer, real-time feature streaming, or continuous model retraining. New or sparse-history users also have less behavioral signal available for personalization and may rely more heavily on fallback popularity behavior.
+
+The TensorFlow sequential recommender was implemented and evaluated as an experiment, but it did not outperform the final purchase-oriented ranking pipeline on the held-out benchmark. It is retained as experimental evidence rather than presented as the production winner.
+
+Large raw files, generated Parquet datasets, local MLflow state, and trained model binaries are intentionally excluded from Git because of their size. The repository instead versions source code, configuration, tests, documentation, and compact measured-result artifacts.
