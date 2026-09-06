@@ -168,7 +168,6 @@ The quality gate runs source verification, Ruff formatting/linting, strict mypy,
 
 The first global Gold aggregation over roughly 410M Silver rows exhausted DuckDB temporary storage after a ~30.6 GiB spill. The system was redesigned around monthly Gold partitions instead of increasing memory/disk limits and keeping a fragile monolithic query. This makes the pipeline restartable, bounded in working-set size, and naturally aligned with chronological evaluation.
 
-pbpaste > /tmp/rees46_results.md
 
 ## Documentation
 
