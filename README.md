@@ -1,15 +1,17 @@
 # REES46 V2 — Behavioral Recommendation Platform
 
-A production-style recommendation engineering project built on the public REES46 multi-category marketplace behavior dataset. The repository treats recommendation as an end-to-end systems problem: data provenance, large-scale event processing, quality gates, leakage-safe evaluation, retrieval, ranking, sequential modeling, experiment tracking, serving, and reproducible operations.
+An independent recommendation engineering project built on the public REES46 multi-category marketplace behavior dataset. The repository treats recommendation as an end-to-end systems problem: data provenance, large-scale event processing, quality gates, leakage-safe evaluation, retrieval, ranking, sequential modeling, experiment tracking, serving, and reproducible operations.
 
 <!-- recruiter-summary -->
 [![CI](https://github.com/nikchey29/rees46-v2/actions/workflows/ci.yml/badge.svg)](https://github.com/nikchey29/rees46-v2/actions/workflows/ci.yml) ![Python 3.11](https://img.shields.io/badge/Python-3.11-blue) [![Release](https://img.shields.io/badge/release-v0.1.0-blue)](https://github.com/nikchey29/rees46-v2/releases/tag/v0.1.0)
 
 **411.7M Bronze events** · **410.3M canonical events** · **15.6M users** · **386K products** · **8.97M sessions**
 
-**Production pipeline:** `Bronze → Silver → monthly Gold → retrieval → purchase ranking → Top-K evaluation → MLflow → FastAPI`
+**Implemented pipeline:** `Bronze → Silver → monthly Gold → retrieval → purchase ranking → Top-K evaluation → MLflow → FastAPI`
 
-**Held-out April 2020 test vs. popularity baseline:** **+24.7% Recall@10** · **+10.6% Recall@20** · **+45.6% MRR@20** · **+23.3% NDCG@20**
+**Offline ranker evaluation — 5,000 held-out April 2020 users:** **MRR@20 0.02443 → 0.03556 (+45.6% vs popularity)**. Recall@10 +24.7%, Recall@20 +10.6% and NDCG@20 +23.3%.
+
+**Experiment scope:** 1,499,021 training interactions, 5,000 validation users and 5,000 test users. The 411.7M-event pipeline and 15.6M-user corpus above describe data processing, not the model's training sample, test sample or served users. See the [frozen benchmark JSON](results/latest/model_benchmark.json).
 
 ## Verified scale
 
