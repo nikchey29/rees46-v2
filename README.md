@@ -1,6 +1,8 @@
 # REES46 V2 — Behavioral Recommendation Platform
 
-An independent recommendation engineering project built on the public REES46 multi-category marketplace behavior dataset. The repository treats recommendation as an end-to-end systems problem: data provenance, large-scale event processing, quality gates, leakage-safe evaluation, retrieval, ranking, sequential modeling, experiment tracking, serving, and reproducible operations.
+I wanted to find out what it actually takes to turn messy shopping events into usable recommendations — not just train a model on a tidy table. I used the public REES46 dataset to build the data pipeline, compare retrieval and ranking approaches, and expose the chosen offline model through an API.
+
+**The tricky part wasn't the model.** My first attempt to aggregate roughly 410 million clean events ran out of temporary storage after a ~30.6 GiB DuckDB spill. I redesigned the Gold layer to process monthly partitions so work could be resumed instead of starting over. The dataset-wide processing and the much smaller recommendation benchmark are reported separately below.
 
 <!-- recruiter-summary -->
 [![CI](https://github.com/nikchey29/rees46-v2/actions/workflows/ci.yml/badge.svg)](https://github.com/nikchey29/rees46-v2/actions/workflows/ci.yml) ![Python 3.11](https://img.shields.io/badge/Python-3.11-blue) [![Release](https://img.shields.io/badge/release-v0.1.0-blue)](https://github.com/nikchey29/rees46-v2/releases/tag/v0.1.0)
@@ -9,7 +11,7 @@ An independent recommendation engineering project built on the public REES46 mul
 
 **Implemented pipeline:** `Bronze → Silver → monthly Gold → retrieval → purchase ranking → Top-K evaluation → MLflow → FastAPI`
 
-**Offline ranker evaluation — 5,000 held-out April 2020 users:** **MRR@20 0.02443 → 0.03556 (+45.6% vs popularity)**. Recall@10 +24.7%, Recall@20 +10.6% and NDCG@20 +23.3%.
+**What improved in the offline test:** on 5,000 held-out April 2020 users, **MRR@20 rose from 0.02443 to 0.03556** (+45.6% relative to popularity). Absolute ranking quality is still modest; there is no claim of online engagement or business lift. Recall@10 improved 24.7%, Recall@20 10.6%, and NDCG@20 23.3%.
 
 **Experiment scope:** 1,499,021 training interactions, 5,000 validation users and 5,000 test users. The 411.7M-event pipeline and 15.6M-user corpus above describe data processing, not the model's training sample, test sample or served users. See the [frozen benchmark JSON](results/latest/model_benchmark.json).
 
