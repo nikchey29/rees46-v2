@@ -231,11 +231,11 @@ Against the popularity baseline on the untouched April 2020 test set, the final 
 
 The experiments also evaluated category-popularity, co-visitation, collaborative-filtering, hybrid-retrieval, ranking, and TensorFlow sequential approaches. The sequential model was retained as an experiment rather than presented as the winner: additional model complexity did not outperform the final ranking pipeline on the held-out benchmark.
 
-### Production validation
+### Local API validation
 
 The final recommendation bundle is exposed through a FastAPI service.
 
-Local API smoke testing verified `/health` returned status `ok` with the model loaded, and `/model` identified the deployed model as `hybrid+ranker` with a candidate pool size of 100.
+Local API smoke testing verified `/health` returned status `ok` with the model loaded, and `/model` identified the locally loaded model as `hybrid+ranker` with a candidate pool size of 100.
 
 Experiment metadata is tracked locally with MLflow backed by SQLite. Large raw datasets, derived Parquet datasets, MLflow state, and trained model binaries are intentionally excluded from Git.
 
