@@ -250,3 +250,7 @@ The system does not currently include an online A/B-testing layer, real-time fea
 The TensorFlow sequential recommender was implemented and evaluated as an experiment, but it did not outperform the final purchase-oriented ranking pipeline on the held-out benchmark. It is retained as experimental evidence rather than presented as the production winner.
 
 Large raw files, generated Parquet datasets, local MLflow state, and trained model binaries are intentionally excluded from Git because of their size. The repository instead versions source code, configuration, tests, documentation, and compact measured-result artifacts.
+
+## License
+
+Released under the [MIT License](LICENSE).
